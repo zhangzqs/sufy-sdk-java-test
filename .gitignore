@@ -1,0 +1,11 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+# 忽略用于测试的配置文件
+/app/src/test/resources/test-config.json
+
+/.idea
+gradle/wrapper/gradle-wrapper.jar
