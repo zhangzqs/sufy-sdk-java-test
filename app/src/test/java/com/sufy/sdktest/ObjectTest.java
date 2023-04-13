@@ -33,8 +33,7 @@ public class ObjectTest {
 
     @BeforeEach
     public void setup() throws IOException {
-        this.recorder = new HttpClientRecorder(ApacheHttpClient
-                .builder()
+        this.recorder = new HttpClientRecorder(ApacheHttpClient.builder()
                 .maxConnections(100)
                 .connectionTimeout(Duration.ofSeconds(5))
                 .build()
@@ -168,8 +167,7 @@ public class ObjectTest {
 
             recorder.startRecording();
             {
-                final CreateBucketResponse response = object.createBucket(CreateBucketRequest
-                        .builder()
+                final CreateBucketResponse response = object.createBucket(CreateBucketRequest.builder()
                         .bucket(getBucketName())
                         // aws要求LocationConstraint和Host里的Region信息一致，我们不要求，这样方便创建任意区域的空间
                         .createBucketConfiguration(CreateBucketConfiguration.builder()
@@ -206,8 +204,7 @@ public class ObjectTest {
         public void testHeadBucket() {
             recorder.startRecording();
             {
-                HeadBucketResponse headBucketResponse = object.headBucket(HeadBucketRequest
-                        .builder()
+                HeadBucketResponse headBucketResponse = object.headBucket(HeadBucketRequest.builder()
                         .bucket(getBucketName())
                         .build()
                 );
@@ -235,8 +232,7 @@ public class ObjectTest {
         public void testGetBucketLocation() {
             recorder.startRecording();
             {
-                GetBucketLocationResponse response = object.getBucketLocation(GetBucketLocationRequest
-                        .builder()
+                GetBucketLocationResponse response = object.getBucketLocation(GetBucketLocationRequest.builder()
                         .bucket(getBucketName())
                         .build()
                 );
@@ -265,8 +261,7 @@ public class ObjectTest {
         @Test
         public void testDeleteBucket() {
 
-            object.deleteBucket(DeleteBucketRequest
-                    .builder()
+            object.deleteBucket(DeleteBucketRequest.builder()
                     .bucket(getBucketName())
                     .build()
             );
@@ -386,18 +381,48 @@ public class ObjectTest {
     @Nested
     class LifecycleTest {
         @Test
-        public void testPutLifecycle() {
-            object.putBucketLifecycleConfiguration(req -> req.bucket(getBucketName()).build());
-        }
+        public void testPutGetDeleteLifecycle() {
+            object.putBucketLifecycleConfiguration(PutBucketLifecycleConfigurationRequest.builder()
+                    .bucket(getBucketName())
+                    .checksumAlgorithm("MD5")
+                    .lifecycleConfiguration(BucketLifecycleConfiguration.builder()
+                            .rules(List.of(
+                                    LifecycleRule.builder()
+                                            .id("test")
+                                            .filter(LifecycleRuleFilter.builder()
+                                                    .prefix("test")
+                                                    .build()
+                                            )
+                                            .transitions(List.of(
+                                                    Transition.builder()
+                                                            .days(1)
+                                                            .storageClass(TransitionStorageClass.STANDARD_IA)
+                                                            .build()
+                                            ))
+                                            .expiration(LifecycleExpiration.builder()
+                                                    .days(1)
+                                                    .build()
+                                            )
+                                            .build()
+                            ))
+                            .build()
+                    )
+                    .build()
+            );
 
-        @Test
-        public void testGetLifecycle() {
-            object.getBucketLifecycleConfiguration(req -> req.bucket(getBucketName()).build());
-        }
+            GetBucketLifecycleConfigurationResponse getBucketLifecycleConfigurationResponse = object.getBucketLifecycleConfiguration(
+                    GetBucketLifecycleConfigurationRequest.builder()
+                            .bucket(getBucketName())
+                            .build()
+            );
+            LifecycleRule rule = getBucketLifecycleConfigurationResponse.rules().get(0);
+            // TODO: SDK缺少 rule.creationDate() 扩展字段的获取方法
 
-        @Test
-        public void testDeleteLifecycle() {
-            object.deleteBucketLifecycle(req -> req.bucket(getBucketName()).build());
+            // 删除
+            object.deleteBucketLifecycle(DeleteBucketLifecycleRequest.builder()
+                    .bucket(getBucketName())
+                    .build()
+            );
         }
 
     }
@@ -433,8 +458,7 @@ public class ObjectTest {
             // aws在没配置BucketPolicy时会报NoSuchBucketPolicy,对客户端不友好，我们返回200(isPublic值为false)
             recorder.startRecording();
             {
-                GetBucketPolicyStatusResponse getBucketLocationResponse = object.getBucketPolicyStatus(GetBucketPolicyStatusRequest
-                        .builder()
+                GetBucketPolicyStatusResponse getBucketLocationResponse = object.getBucketPolicyStatus(GetBucketPolicyStatusRequest.builder()
                         .bucket(getBucketName())
                         .build()
                 );
@@ -511,8 +535,7 @@ public class ObjectTest {
 
     // 准备一个测试文件
     private void prepareTestFile(String key, String content) {
-        object.putObject(PutObjectRequest
-                        .builder()
+        object.putObject(PutObjectRequest.builder()
                         .bucket(getBucketName())
                         .key(key)
                         .build(),
@@ -522,8 +545,7 @@ public class ObjectTest {
 
     // 删除一个测试文件
     private void deleteTestFile(String key) {
-        object.deleteObject(DeleteObjectRequest
-                .builder()
+        object.deleteObject(DeleteObjectRequest.builder()
                 .bucket(getBucketName())
                 .key(key)
                 .build()
@@ -537,8 +559,7 @@ public class ObjectTest {
             {
                 // 不允许空key
                 assertThrows(SdkClientException.class, () -> {
-                    object.putObject(PutObjectRequest
-                                    .builder()
+                    object.putObject(PutObjectRequest.builder()
                                     .bucket(getBucketName())
                                     .key("")
                                     .build(),
@@ -550,8 +571,7 @@ public class ObjectTest {
             String content = "HelloWorld";
             recorder.startRecording();
             {
-                PutObjectResponse putObjectResponse = object.putObject(PutObjectRequest
-                                .builder()
+                PutObjectResponse putObjectResponse = object.putObject(PutObjectRequest.builder()
                                 .bucket(getBucketName())
                                 .key(key)
                                 .storageClass("STANDARD")
@@ -613,8 +633,7 @@ public class ObjectTest {
                 //      "resource":"/kodo-s3apiv2-test-miku-sufy-java-sdk-test/testCreateMultipartUploadFile",
                 //      "requestId":"BwAAAK73TASwaVUX"
                 //  }
-                object.createMultipartUpload(CreateMultipartUploadRequest
-                        .builder()
+                object.createMultipartUpload(CreateMultipartUploadRequest.builder()
                         .key(key)
                         .bucket(getBucketName())
                         .contentType(contentType)
@@ -676,30 +695,44 @@ public class ObjectTest {
 
         @Test
         public void testCopyObject() {
-            object.copyObject(req -> req.bucket(getBucketName()).build());
+            String srcKey = "testCopyObjectFileKeySrc";
+            String destKey = "testCopyObjectFileKeyDest";
+            /*
+             * TODO:
+             *  The request signature we calculated does not match the signature you provided
+             *  (Service: Object, Status Code: 403, Request ID: null)
+             *  com.sufy.sdk.services.object.model.ObjectException: The request signature we
+             *  calculated does not match the signature you provided (Service: Object,
+             *  Status Code: 403, Request ID: null)
+             * */
+            object.copyObject(CopyObjectRequest.builder()
+                    .sourceBucket(getBucketName())
+                    .destinationBucket(getBucketName())
+                    .sourceKey(srcKey)
+                    .destinationKey(destKey)
+                    .build()
+            );
         }
 
         @Test
         public void testDeleteObject() {
             String key = "testDeleteObjectFileKey";
             prepareTestFile(key, "");
-            HeadObjectResponse headObjectResponse = object.headObject(HeadObjectRequest
-                    .builder()
+            // TODO: 由于Head无法使用
+            HeadObjectResponse headObjectResponse = object.headObject(HeadObjectRequest.builder()
                     .bucket(getBucketName())
                     .key(key)
                     .build()
             );
             assertNotNull(headObjectResponse);
             {
-                object.deleteObject(DeleteObjectRequest
-                        .builder()
+                object.deleteObject(DeleteObjectRequest.builder()
                         .bucket(getBucketName())
                         .build()
                 );
             }
             assertThrows(NoSuchKeyException.class, () -> {
-                object.headObject(HeadObjectRequest
-                        .builder()
+                object.headObject(HeadObjectRequest.builder()
                         .bucket(getBucketName())
                         .key(key)
                         .build()
@@ -721,8 +754,7 @@ public class ObjectTest {
                 keys.add(key);
             }
             // 删除空文件
-            DeleteObjectsResponse deleteObjectsResponse = object.deleteObjects(DeleteObjectsRequest
-                    .builder()
+            DeleteObjectsResponse deleteObjectsResponse = object.deleteObjects(DeleteObjectsRequest.builder()
                     .bucket(getBucketName())
                     .delete(Delete.builder()
                             .objects(keys.stream()
@@ -741,8 +773,7 @@ public class ObjectTest {
             // 验证这些文件不存在了
             for (String key : keys) {
                 assertThrows(NoSuchKeyException.class, () -> {
-                    object.headObject(HeadObjectRequest
-                            .builder()
+                    object.headObject(HeadObjectRequest.builder()
                             .bucket(getBucketName())
                             .key(key)
                             .build()
@@ -761,8 +792,7 @@ public class ObjectTest {
             // TODO: Unable to unmarshall response (No marshaller/unmarshaller of type Map registered for location HEADER.).
             // TODO: Response Code: 200, Response Text: OK
             recorder.startRecording();
-            HeadObjectResponse headBucketResponse = object.headObject(HeadObjectRequest
-                    .builder()
+            HeadObjectResponse headBucketResponse = object.headObject(HeadObjectRequest.builder()
                     .bucket(getBucketName())
                     .key(key)
                     .build()
@@ -776,7 +806,10 @@ public class ObjectTest {
 
         @Test
         public void testRestoreObject() {
-            object.restoreObject(req -> req.bucket(getBucketName()).build());
+            RestoreObjectResponse restoreObjectResponse = object.restoreObject(RestoreObjectRequest.builder()
+                    .bucket(getBucketName())
+                    .build()
+            );
         }
 
     }
@@ -790,8 +823,7 @@ public class ObjectTest {
         public void testGetObjectAcl() {
             assertThrows(ObjectException.class, () -> {
                 try {
-                    object.getObjectAcl(GetObjectAclRequest
-                            .builder()
+                    object.getObjectAcl(GetObjectAclRequest.builder()
                             .bucket(getBucketName())
                             .key(KEY)
                             .build()
@@ -807,8 +839,7 @@ public class ObjectTest {
         public void testPutObjectAcl() {
             assertThrows(ObjectException.class, () -> {
                 try {
-                    object.putObjectAcl(PutObjectAclRequest
-                            .builder()
+                    object.putObjectAcl(PutObjectAclRequest.builder()
                             .bucket(getBucketName())
                             .key(KEY)
                             .build()
