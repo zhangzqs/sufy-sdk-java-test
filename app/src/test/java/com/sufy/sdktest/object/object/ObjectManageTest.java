@@ -63,8 +63,8 @@ public class ObjectManageTest extends ObjectTestBase {
     @Test
     public void testDeleteObjects() {
         // TODO: 批量删除操作未删除成功
-        // TODO: SDK发出请求的请求体JSON中的key为Object而文档中为objects
-        // TODO: 服务器端响应200但是返回的JSON中的deleted字段为空列表
+        //  SDK发出请求的请求体JSON中的key为Object而文档中为objects
+        //  服务器端响应200但是返回的JSON中的deleted字段为空列表
         int nums = 10;
         // 准备空文件
         List<String> keys = new ArrayList<>();
@@ -109,8 +109,8 @@ public class ObjectManageTest extends ObjectTestBase {
         prepareTestFile(key, content);
 
         // TODO: headObject 无法正常反序列化响应内容实体
-        // TODO: Unable to unmarshall response (No marshaller/unmarshaller of type Map registered for location HEADER.).
-        // TODO: Response Code: 200, Response Text: OK
+        //  Unable to unmarshall response (No marshaller/unmarshaller of type Map registered for location HEADER.).
+        //  Response Code: 200, Response Text: OK
         recorder.startRecording();
         HeadObjectResponse headBucketResponse = object.headObject(HeadObjectRequest.builder()
                 .bucket(getBucketName())

@@ -20,6 +20,7 @@ public class CorsTest extends ObjectTestBase {
          * TODO:
          *  SDK发出的实际请求："{"CORSRule":[{"iD":"test-cors-1","AllowedMethod":["GET","POST"],"AllowedOrigin":["http://www.a.com"]}]}"
          *  预期的请求体数据：{"CORSRules":[{"id":"test-cors-1","allowedOrigins":["GET","POST"],"allowedOrigins":["http://www.a.com"]}]}"
+         *  猜测这些字段的不一致可能是由于沿袭了XML字段命名规则导致的
          */
         object.putBucketCors(PutBucketCorsRequest.builder()
                 .bucket(getBucketName())

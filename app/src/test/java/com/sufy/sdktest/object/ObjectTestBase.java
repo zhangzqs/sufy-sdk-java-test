@@ -80,9 +80,9 @@ public class ObjectTestBase {
 
         {
             // TODO: 这两个请求头是否需要改为sufy开头？没有在sufy sdk代码与服务定义文件中找到，
-            // TODO: 猜测可能是aws sdk的http client依赖，或许需要使用拦截器修改这两个字段名
-            // TODO: amz-sdk-invocation-id: 28560793-74f0-7394-1fd3-addafac3045c
-            // TODO: amz-sdk-request: attempt=1; max=4
+            //  猜测可能是aws sdk的http client依赖，或许需要使用拦截器修改这两个字段名
+            //  amz-sdk-invocation-id: 28560793-74f0-7394-1fd3-addafac3045c
+            //  amz-sdk-request: attempt=1; max=4
 //            assertTrue(request.headers().containsKey("sufy-sdk-invocation-id"));
 //            assertTrue(request.headers().containsKey("sufy-sdk-request"));
         }

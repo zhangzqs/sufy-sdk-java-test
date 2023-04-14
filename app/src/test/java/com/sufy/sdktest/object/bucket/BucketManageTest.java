@@ -88,7 +88,7 @@ public class BucketManageTest extends ObjectTestBase {
                     .build()
             );
             // TODO: 返回null
-            // TODO: 需要将区域内置到SDK中，否则不存在的regionId将返回null
+            //  需要将区域内置到SDK中，否则不存在的regionId将返回null
 //            BucketLocationConstraint blc = response.locationConstraint();
 //            assertNotNull(blc);
 //            assertEquals(config.getRegion(), response.locationConstraint().toString());
