@@ -12,7 +12,7 @@ public class TestConfig {
     private String region;
     private String endpoint;
     private boolean forcePathStyle;
-    
+
 
     public String getBucketName() {
         return bucketName;
@@ -39,7 +39,7 @@ public class TestConfig {
     }
 
 
-    static TestConfig load() throws IOException {
+    public static TestConfig load() throws IOException {
         try (InputStream is = TestConfig.class.getResourceAsStream("/test-config.json")) {
             Gson gson = new Gson();
             assert is != null;
