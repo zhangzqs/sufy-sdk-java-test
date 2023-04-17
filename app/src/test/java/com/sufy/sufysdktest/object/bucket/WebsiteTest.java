@@ -1,4 +1,4 @@
-package sufy.sufysdktest.object.bucket;
+package com.sufy.sufysdktest.object.bucket;
 
 import org.junit.jupiter.api.Test;
 import sufy.util.ObjectTestBase;

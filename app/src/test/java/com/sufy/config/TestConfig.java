@@ -1,4 +1,4 @@
-package sufy.config;
+package com.sufy.config;
 
 import com.google.gson.Gson;
 

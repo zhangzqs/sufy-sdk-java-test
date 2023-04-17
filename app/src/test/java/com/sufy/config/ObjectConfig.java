@@ -1,4 +1,4 @@
-package sufy.config;
+package com.sufy.config;
 
 
 public class ObjectConfig {

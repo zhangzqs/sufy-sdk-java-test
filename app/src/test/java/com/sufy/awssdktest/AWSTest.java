@@ -1,5 +1,8 @@
-package sufy.awssdktest;
+package com.sufy.awssdktest;
 
+import com.sufy.config.ObjectConfig;
+import com.sufy.config.ProxyConfig;
+import com.sufy.config.TestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -11,9 +14,6 @@ import software.amazon.awssdk.http.apache.ProxyConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
-import sufy.config.ObjectConfig;
-import sufy.config.ProxyConfig;
-import sufy.config.TestConfig;
 
 import java.net.URI;
 import java.time.Duration;

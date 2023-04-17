@@ -1,4 +1,4 @@
-package sufy.sufysdktest.object.object;
+package com.sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.GetObjectAclRequest;
 import com.sufy.sdk.services.object.model.ObjectException;

@@ -1,4 +1,4 @@
-package sufy.sufysdktest.object.bucket;
+package com.sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.ObjectException;
 import org.junit.jupiter.api.Test;

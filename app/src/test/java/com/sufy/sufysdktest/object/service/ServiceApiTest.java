@@ -1,13 +1,13 @@
-package sufy.sufysdktest.object.service;
+package com.sufy.sufysdktest.object.service;
 
 import com.sufy.sdk.services.object.model.Bucket;
 import com.sufy.sdk.services.object.model.ListBucketsRequest;
 import com.sufy.sdk.services.object.model.ListBucketsResponse;
+import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import sufy.sufysdktest.HttpClientRecorder;
 import sufy.util.ObjectTestBase;
 
 import static org.junit.jupiter.api.Assertions.*;

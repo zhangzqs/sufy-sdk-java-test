@@ -1,9 +1,13 @@
-package sufy.util;
+package com.sufy.sufysdktest.object;
 
+import com.sufy.config.ObjectConfig;
+import com.sufy.config.ProxyConfig;
+import com.sufy.config.TestConfig;
 import com.sufy.sdk.auth.credentials.StaticCredentialsProvider;
 import com.sufy.sdk.auth.credentials.SufyBasicCredentials;
 import com.sufy.sdk.services.object.ObjectClient;
 import com.sufy.sdk.services.object.model.*;
+import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +17,6 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.http.apache.ProxyConfiguration;
 import software.amazon.awssdk.regions.Region;
-import sufy.config.ObjectConfig;
-import sufy.config.ProxyConfig;
-import sufy.config.TestConfig;
-import sufy.sufysdktest.HttpClientRecorder;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ObjectTestBase {
+public class ObjectBaseTest {
     protected ObjectConfig config;
     protected ProxyConfig proxyConfig;
     protected ObjectClient object;
