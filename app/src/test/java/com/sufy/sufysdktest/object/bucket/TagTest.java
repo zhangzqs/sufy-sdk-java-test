@@ -1,18 +1,18 @@
 package com.sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.*;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import sufy.util.ObjectTestBase;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TagTest extends ObjectTestBase {
+public class TagTest extends ObjectBaseTest {
     @Test
     public void testPutBucketTagging() {
         /*

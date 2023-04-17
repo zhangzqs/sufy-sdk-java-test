@@ -1,8 +1,8 @@
 package com.sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.*;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import org.junit.jupiter.api.Test;
-import sufy.util.ObjectTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ObjectManageTest extends ObjectTestBase {
+public class ObjectManageTest extends ObjectBaseTest {
 
     @Test
     public void testCopyObject() {

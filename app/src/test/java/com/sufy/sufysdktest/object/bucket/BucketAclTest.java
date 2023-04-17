@@ -1,8 +1,8 @@
 package com.sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.ObjectException;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import org.junit.jupiter.api.Test;
-import sufy.util.ObjectTestBase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /*
  * Sufy 不支持 Bucket ACL 功能，Sufy SDK中均应当获得501 NotImplemented错误
  * */
-public class BucketAclTest extends ObjectTestBase {
+public class BucketAclTest extends ObjectBaseTest {
 
     @Test
     public void testPutBucketAcl() {

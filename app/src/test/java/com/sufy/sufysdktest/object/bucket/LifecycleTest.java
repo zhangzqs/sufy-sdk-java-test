@@ -1,18 +1,18 @@
 package com.sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.*;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import sufy.util.ObjectTestBase;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class LifecycleTest extends ObjectTestBase {
+public class LifecycleTest extends ObjectBaseTest {
     @Test
     public void testPutLifecycle() {
         /*

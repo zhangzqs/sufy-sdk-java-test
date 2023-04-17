@@ -1,19 +1,19 @@
 package com.sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.*;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import sufy.util.ObjectTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ListObjectTest extends ObjectTestBase {
+public class ListObjectTest extends ObjectBaseTest {
 
     @Test
     public void testListObjects() {

@@ -1,6 +1,7 @@
 package com.sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.*;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -8,13 +9,12 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import sufy.util.ObjectTestBase;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ObjectPutAndGetTest extends ObjectTestBase {
+public class ObjectPutAndGetTest extends ObjectBaseTest {
 
     @Test
     public void testPutObject() {

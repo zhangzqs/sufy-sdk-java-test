@@ -1,6 +1,7 @@
 package com.sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.CreateMultipartUploadRequest;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.Test;
@@ -8,11 +9,10 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
-import sufy.util.ObjectTestBase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class MultipartUploadTest extends ObjectTestBase {
+public class MultipartUploadTest extends ObjectBaseTest {
 
     @Test
     public void testCreateMultipartUpload() {

@@ -1,9 +1,9 @@
 package com.sufy.sufysdktest.object.bucket;
 
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import org.junit.jupiter.api.Test;
-import sufy.util.ObjectTestBase;
 
-public class WebsiteTest extends ObjectTestBase {
+public class WebsiteTest extends ObjectBaseTest {
     @Test
     public void testPutBucketWebsite() {
         // TODO: 服务端未实现

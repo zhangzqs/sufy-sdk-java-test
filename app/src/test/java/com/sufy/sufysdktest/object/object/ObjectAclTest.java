@@ -3,13 +3,13 @@ package com.sufy.sufysdktest.object.object;
 import com.sufy.sdk.services.object.model.GetObjectAclRequest;
 import com.sufy.sdk.services.object.model.ObjectException;
 import com.sufy.sdk.services.object.model.PutObjectAclRequest;
+import com.sufy.sufysdktest.object.ObjectBaseTest;
 import org.junit.jupiter.api.Test;
-import sufy.util.ObjectTestBase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ObjectAclTest extends ObjectTestBase {
+public class ObjectAclTest extends ObjectBaseTest {
     private static final String KEY = "testObjectAclFileKey";
 
     // Sufy 签名的两个object acl接口，均返回 501 Not Implemented
