@@ -1,7 +1,7 @@
-package com.sufy.sdktest.object.bucket;
+package sufy.sufysdktest.object.bucket;
 
-import com.sufy.sdktest.object.ObjectTestBase;
 import org.junit.jupiter.api.Test;
+import sufy.util.ObjectTestBase;
 
 public class WebsiteTest extends ObjectTestBase {
     @Test

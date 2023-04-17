@@ -1,40 +1,55 @@
-package com.sufy.sdktest.object;
+package sufy.util;
 
 import com.sufy.sdk.auth.credentials.StaticCredentialsProvider;
 import com.sufy.sdk.auth.credentials.SufyBasicCredentials;
 import com.sufy.sdk.services.object.ObjectClient;
-import com.sufy.sdk.services.object.model.DeleteObjectRequest;
-import com.sufy.sdk.services.object.model.PutObjectRequest;
-import com.sufy.sdktest.HttpClientRecorder;
-import com.sufy.sdktest.TestConfig;
+import com.sufy.sdk.services.object.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
 import software.amazon.awssdk.regions.Region;
+import sufy.config.ObjectConfig;
+import sufy.config.ProxyConfig;
+import sufy.config.TestConfig;
+import sufy.sufysdktest.HttpClientRecorder;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ObjectTestBase {
-    protected TestConfig config;
+    protected ObjectConfig config;
+    protected ProxyConfig proxyConfig;
     protected ObjectClient object;
     protected HttpClientRecorder recorder;
 
     @BeforeEach
     public void setup() throws IOException {
-        this.recorder = new HttpClientRecorder(ApacheHttpClient.builder()
-                .maxConnections(100)
-                .connectionTimeout(Duration.ofSeconds(5))
-                .build()
-        );
+        this.config = TestConfig.load().object;
+        this.proxyConfig = TestConfig.load().proxy;
 
-        this.config = TestConfig.load();
+        ApacheHttpClient.Builder apacheHttpClientBuilder = ApacheHttpClient.builder()
+                .maxConnections(100)
+                .connectionTimeout(Duration.ofSeconds(5));
+        if (proxyConfig != null) {
+            apacheHttpClientBuilder.proxyConfiguration(ProxyConfiguration.builder()
+                    .endpoint(
+                            URI.create(
+                                    proxyConfig.getType() + "://" + proxyConfig.getHost() + ":" + proxyConfig.getPort()
+                            )
+                    ).build()
+            );
+        }
+        this.recorder = new HttpClientRecorder(apacheHttpClientBuilder.build());
+
         this.object = ObjectClient.builder()
                 .region(Region.of(config.getRegion())) // 华东区 region id
                 .endpointOverride(URI.create(config.getEndpoint()))
@@ -106,16 +121,6 @@ public class ObjectTestBase {
     }
 
 
-    protected void forceDeleteBucket(String bucketName) {
-        try {
-            // TODO： 先删除所有对象
-            object.deleteBucket(req -> req.bucket(bucketName).build());
-        } catch (Exception e) {
-            // ignore
-        }
-    }
-
-
     // 准备一个测试文件
     protected void prepareTestFile(String key, String content) {
         object.putObject(PutObjectRequest.builder()
@@ -135,5 +140,77 @@ public class ObjectTestBase {
         );
     }
 
+    // 清理测试环境所有文件
+    protected void cleanAllFiles() {
+        // 定义批量删除请求
+        String bucketName = getBucketName();
+        ListObjectsV2Request listReq = ListObjectsV2Request.builder().bucket(bucketName).build();
+        ListObjectsV2Response listRes;
 
+        do {
+            // 列出存储桶中的对象
+            listRes = object.listObjectsV2(listReq);
+            // 构建批量删除请求
+
+            // 删除对象
+            object.deleteObjects(DeleteObjectsRequest.builder()
+                    .bucket(bucketName)
+                    .delete(Delete.builder()
+                            .objects(listRes.contents().stream()
+                                    .map(o -> ObjectIdentifier.builder().key(o.key()).build())
+                                    .collect(Collectors.toList()))
+                            .build()
+                    )
+                    .build()
+            );
+            listReq = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .continuationToken(listRes.nextContinuationToken())
+                    .build();
+        } while (listRes.isTruncated());
+    }
+
+    protected void forceDeleteBucket(String bucketName) {
+        try {
+            cleanAllFiles();
+            object.deleteBucket(req -> req.bucket(bucketName).build());
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    protected void makeSureBucketExists() {
+        try {
+            object.createBucket(CreateBucketRequest.builder()
+                    .bucket(getBucketName())
+                    // aws要求LocationConstraint和Host里的Region信息一致，我们不要求，这样方便创建任意区域的空间
+                    .createBucketConfiguration(CreateBucketConfiguration.builder()
+                            .locationConstraint(config.getRegion())
+                            .build()
+                    )
+                    .build()
+            );
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    @Test
+    public void testClearAllFiles() {
+        // 创建10个文件
+        for (int i = 0; i < 10; i++) {
+            prepareTestFile("test" + i, "test" + i);
+        }
+
+        cleanAllFiles();
+
+        // 列举文件
+        ListObjectsV2Response listRes = object.listObjectsV2(ListObjectsV2Request.builder()
+                .bucket(getBucketName())
+                .build()
+        );
+
+        // 判断是否为空
+        assertTrue(listRes.contents().isEmpty());
+    }
 }

@@ -1,12 +1,12 @@
-package com.sufy.sdktest.object.bucket;
+package sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.*;
-import com.sufy.sdktest.HttpClientRecorder;
-import com.sufy.sdktest.object.ObjectTestBase;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import sufy.sufysdktest.HttpClientRecorder;
+import sufy.util.ObjectTestBase;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +28,6 @@ public class BucketManageTest extends ObjectTestBase {
             );
             assertNotNull(response.location());
         }
-
         HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
 
         // 请求头与响应头判定
@@ -59,7 +58,7 @@ public class BucketManageTest extends ObjectTestBase {
                     .bucket(getBucketName())
                     .build()
             );
-            // TODO: SDK 缺少该字段获取器
+            // TODO: SDK 缺少该字段的获取器
 //            assertNotNull(headBucketResponse.region());
         }
         HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
@@ -87,8 +86,12 @@ public class BucketManageTest extends ObjectTestBase {
                     .bucket(getBucketName())
                     .build()
             );
+            String locationConstraint = response.locationConstraintAsString();
+            assertNotNull(locationConstraint);
+            assertEquals(config.getRegion(), locationConstraint);
             // TODO: 返回null
             //  需要将区域内置到SDK中，否则不存在的regionId将返回null
+            //  SDK目前只能返回枚举中固定的值
 //            BucketLocationConstraint blc = response.locationConstraint();
 //            assertNotNull(blc);
 //            assertEquals(config.getRegion(), response.locationConstraint().toString());
@@ -111,10 +114,29 @@ public class BucketManageTest extends ObjectTestBase {
 
     @Test
     public void testDeleteBucket() {
+        // 先确保存在这个bucket
+        makeSureBucketExists();
 
-        object.deleteBucket(DeleteBucketRequest.builder()
-                .bucket(getBucketName())
-                .build()
-        );
+        recorder.startRecording();
+        {
+            DeleteBucketResponse response = object.deleteBucket(DeleteBucketRequest.builder()
+                    .bucket(getBucketName())
+                    .build()
+            );
+            assertNotNull(response);
+        }
+        HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
+
+        // 请求头与响应头判定
+        SdkHttpRequest req = record.request.httpRequest();
+        SdkHttpResponse resp = record.response.httpResponse();
+
+        checkPublicRequestHeader(req);
+        assertEquals(SdkHttpMethod.DELETE, req.method());
+        assertEquals("/" + getBucketName(), req.encodedPath());
+
+        checkPublicResponseHeader(resp);
+        assertEquals(204, resp.statusCode());
+        assertEquals("No Content", resp.statusText().orElseThrow());
     }
 }

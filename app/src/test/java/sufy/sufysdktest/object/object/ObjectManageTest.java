@@ -1,9 +1,8 @@
-package com.sufy.sdktest.object.object;
+package sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.*;
-import com.sufy.sdktest.HttpClientRecorder;
-import com.sufy.sdktest.object.ObjectTestBase;
 import org.junit.jupiter.api.Test;
+import sufy.util.ObjectTestBase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,28 +99,6 @@ public class ObjectManageTest extends ObjectTestBase {
                 );
             });
         }
-    }
-
-    @Test
-    public void testHeadObject() {
-        String key = "testHeadObjectFileKey";
-        String content = "HelloWorld";
-        prepareTestFile(key, content);
-
-        // TODO: headObject 无法正常反序列化响应内容实体
-        //  Unable to unmarshall response (No marshaller/unmarshaller of type Map registered for location HEADER.).
-        //  Response Code: 200, Response Text: OK
-        recorder.startRecording();
-        HeadObjectResponse headBucketResponse = object.headObject(HeadObjectRequest.builder()
-                .bucket(getBucketName())
-                .key(key)
-                .build()
-        );
-        HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
-        assertNotNull(headBucketResponse);
-        assertEquals(content.length(), headBucketResponse.contentLength());
-
-        deleteTestFile(key);
     }
 
     @Test

@@ -1,12 +1,12 @@
-package com.sufy.sdktest.object.bucket;
+package sufy.sufysdktest.object.bucket;
 
 import com.sufy.sdk.services.object.model.*;
-import com.sufy.sdktest.HttpClientRecorder;
-import com.sufy.sdktest.object.ObjectTestBase;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import sufy.sufysdktest.HttpClientRecorder;
+import sufy.util.ObjectTestBase;
 
 import java.util.List;
 

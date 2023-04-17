@@ -1,10 +1,10 @@
-package com.sufy.sdktest.object.object;
+package sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.GetObjectAclRequest;
 import com.sufy.sdk.services.object.model.ObjectException;
 import com.sufy.sdk.services.object.model.PutObjectAclRequest;
-import com.sufy.sdktest.object.ObjectTestBase;
 import org.junit.jupiter.api.Test;
+import sufy.util.ObjectTestBase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

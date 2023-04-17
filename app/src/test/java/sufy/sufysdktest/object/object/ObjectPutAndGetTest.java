@@ -1,22 +1,23 @@
-package com.sufy.sdktest.object.object;
+package sufy.sufysdktest.object.object;
 
-import com.sufy.sdk.services.object.model.PutObjectRequest;
-import com.sufy.sdk.services.object.model.PutObjectResponse;
-import com.sufy.sdktest.HttpClientRecorder;
-import com.sufy.sdktest.object.ObjectTestBase;
+import com.sufy.sdk.services.object.model.*;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import sufy.sufysdktest.HttpClientRecorder;
+import sufy.util.ObjectTestBase;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ObjectPutAndGetTest extends ObjectTestBase {
 
     @Test
-    public void testPutObject() throws Exception {
+    public void testPutObject() {
         {
             // 不允许空key
             assertThrows(SdkClientException.class, () -> {
@@ -30,12 +31,18 @@ public class ObjectPutAndGetTest extends ObjectTestBase {
         }
         String key = "testKey1";
         String content = "HelloWorld";
+        Map<String, String> metadata = Map.ofEntries(
+                Map.entry("testKey1", "testValue1"),
+                Map.entry("testKey2", "testValue2")
+        );
+        String storageClass = "STANDARD";
         recorder.startRecording();
         {
             PutObjectResponse putObjectResponse = object.putObject(PutObjectRequest.builder()
                             .bucket(getBucketName())
                             .key(key)
-                            .storageClass("STANDARD")
+                            .storageClass(storageClass)
+                            .metadata(metadata)
                             .build(),
                     RequestBody.fromString(content)
             );
@@ -59,8 +66,11 @@ public class ObjectPutAndGetTest extends ObjectTestBase {
         }
 
         assertTrue(req.headers().containsKey("Content-Type"));
-        // TODO: 缺少X-Sufy-Meta-前缀的请求头
-        assertTrue(req.headers().containsKey("X-Sufy-Meta-" + key));
+
+        for (Map.Entry<String, String> entry : metadata.entrySet()) {
+            assertTrue(req.headers().containsKey("X-Sufy-Meta-" + entry.getKey()));
+            assertEquals(req.headers().get("X-Sufy-Meta-" + entry.getKey()).get(0), entry.getValue());
+        }
 
         checkPublicResponseHeader(resp);
         assertEquals(200, resp.statusCode());
@@ -76,5 +86,43 @@ public class ObjectPutAndGetTest extends ObjectTestBase {
     @Test
     public void testGetObject() {
         object.getObject(req -> req.bucket(getBucketName()).build());
+    }
+
+    @Test
+    public void testHeadObject() {
+        String key = "testKey1";
+        String content = "HelloWorld";
+        // TODO: key中包含大写字母时会
+        Map<String, String> metadata = Map.ofEntries(
+                Map.entry("testKey1", "testValue1"),
+                Map.entry("testKey2", "testValue2")
+        );
+        StorageClass storageClass = StorageClass.DEEP_ARCHIVE;
+        PutObjectResponse putObjectResponse = object.putObject(PutObjectRequest.builder()
+                        .bucket(getBucketName())
+                        .key(key)
+                        .storageClass(storageClass)
+                        .metadata(metadata)
+                        .build(),
+                RequestBody.fromString(content)
+        );
+
+        recorder.startRecording();
+        {
+            HeadObjectResponse headBucketResponse = object.headObject(HeadObjectRequest.builder()
+                    .bucket(getBucketName())
+                    .key(key)
+                    .build()
+            );
+            assertNotNull(headBucketResponse);
+            assertEquals(content.length(), headBucketResponse.contentLength());
+            assertEquals(putObjectResponse.eTag(), headBucketResponse.eTag());
+            assertEquals(storageClass, headBucketResponse.storageClass());
+
+            for (Map.Entry<String, String> entry : headBucketResponse.metadata().entrySet()) {
+                assertEquals(entry.getValue(), metadata.get(entry.getKey()));
+            }
+        }
+        HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
     }
 }

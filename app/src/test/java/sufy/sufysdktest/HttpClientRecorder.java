@@ -1,4 +1,4 @@
-package com.sufy.sdktest;
+package sufy.sufysdktest;
 
 import software.amazon.awssdk.http.ExecutableHttpRequest;
 import software.amazon.awssdk.http.HttpExecuteRequest;
