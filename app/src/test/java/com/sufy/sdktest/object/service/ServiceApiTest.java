@@ -15,20 +15,24 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ServiceApiTest extends ObjectTestBase {
 
     @Test
-    public void testListBuckets() throws Exception {
+    public void testListBuckets() {
         recorder.startRecording();
         {
             ListBucketsResponse listBucketsResponse = object.listBuckets(ListBucketsRequest.builder().build());
-            if (listBucketsResponse.buckets().size() > 0) {
-                Bucket bucket = listBucketsResponse.buckets().get(0);
-                assertNotNull(bucket.name());
-                assertNotNull(bucket.creationDate());
-
-                // TODO: SDK 缺少该扩展字段定义
+            // buckets
+            {
+                for (Bucket bucket : listBucketsResponse.buckets()) {
+                    assertNotNull(bucket.name());
+                    assertNotNull(bucket.creationDate());
+                    // TODO: SDK 缺少该扩展字段定义
 //                assertNotNull(bucket.locationConstraint());
+                }
             }
-            assertNotNull(listBucketsResponse.owner().id());
-            assertNotNull(listBucketsResponse.owner().displayName());
+            // owner
+            {
+                assertNotNull(listBucketsResponse.owner().id());
+                assertNotNull(listBucketsResponse.owner().displayName());
+            }
         }
         HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
 
