@@ -22,13 +22,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ObjectBaseTest {
-    private static ExecutorService threadPool;
+    private ExecutorService threadPool;
     protected ObjectConfig config;
     protected ProxyConfig proxyConfig;
     protected ObjectClient object;
@@ -36,7 +37,6 @@ public class ObjectBaseTest {
 
     @BeforeEach
     public void setup() throws IOException {
-        threadPool = java.util.concurrent.Executors.newFixedThreadPool(10);
         this.config = TestConfig.load().object;
         this.proxyConfig = TestConfig.load().proxy;
 
@@ -127,17 +127,27 @@ public class ObjectBaseTest {
 
     // 准备一个测试文件
     protected void prepareTestFile(String key, String content) {
-        threadPool.submit(() -> {
-            object.putObject(PutObjectRequest.builder()
-                            .bucket(getBucketName())
-                            .key(key)
-                            .build(),
-                    RequestBody.fromString(content)
-            );
-        });
+        object.putObject(PutObjectRequest.builder()
+                        .bucket(getBucketName())
+                        .key(key)
+                        .build(),
+                RequestBody.fromString(content)
+        );
     }
 
-    protected void awaitAllTasksFinished() {
+    protected void prepareAsyncEnv(int nThreads) {
+        threadPool = Executors.newFixedThreadPool(nThreads);
+    }
+
+    protected void prepareAsyncEnv() {
+        prepareAsyncEnv(10);
+    }
+
+    protected void submitAsyncTask(Runnable task) {
+        threadPool.submit(task);
+    }
+
+    protected void awaitAllAsyncTasks() {
         threadPool.shutdown();
         try {
             boolean terminated;
@@ -166,7 +176,7 @@ public class ObjectBaseTest {
         String bucketName = getBucketName();
         ListObjectsV2Request listReq = ListObjectsV2Request.builder().bucket(bucketName).build();
         ListObjectsV2Response listRes;
-
+        prepareAsyncEnv();
         do {
             // 列出存储桶中的对象
             listRes = object.listObjectsV2(listReq);
@@ -174,23 +184,22 @@ public class ObjectBaseTest {
 
             // 删除对象
             final ListObjectsV2Response finalListRes = listRes;
-            threadPool.submit(() -> {
-                object.deleteObjects(DeleteObjectsRequest.builder()
-                        .bucket(bucketName)
-                        .delete(Delete.builder()
-                                .objects(finalListRes.contents().stream()
-                                        .map(o -> ObjectIdentifier.builder().key(o.key()).build())
-                                        .collect(Collectors.toList()))
-                                .build()
-                        )
-                        .build()
-                );
-            });
+            submitAsyncTask(() -> object.deleteObjects(DeleteObjectsRequest.builder()
+                    .bucket(bucketName)
+                    .delete(Delete.builder()
+                            .objects(finalListRes.contents().stream()
+                                    .map(o -> ObjectIdentifier.builder().key(o.key()).build())
+                                    .collect(Collectors.toList()))
+                            .build()
+                    )
+                    .build()
+            ));
             listReq = ListObjectsV2Request.builder()
                     .bucket(bucketName)
                     .continuationToken(listRes.nextContinuationToken())
                     .build();
         } while (listRes.isTruncated());
+        awaitAllAsyncTasks();
     }
 
     protected void forceDeleteBucket(String bucketName) {
