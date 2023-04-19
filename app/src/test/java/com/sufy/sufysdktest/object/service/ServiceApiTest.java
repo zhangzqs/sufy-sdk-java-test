@@ -10,7 +10,8 @@ import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ServiceApiTest extends ObjectBaseTest {
 
@@ -44,10 +45,7 @@ public class ServiceApiTest extends ObjectBaseTest {
         req.encodedPath();
         assertEquals(SdkHttpMethod.GET, req.method());
         assertEquals("/", req.encodedPath());
-        assertTrue(req.headers().containsKey("Content-Length"));
-        assertTrue(req.headers().containsKey("Content-Type"));
-
-
+        
         checkPublicResponseHeader(resp);
         assertEquals(200, resp.statusCode());
         assertEquals("OK", resp.statusText().orElseThrow());

@@ -21,11 +21,14 @@ import software.amazon.awssdk.regions.Region;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ObjectBaseTest {
+    private static ExecutorService threadPool;
     protected ObjectConfig config;
     protected ProxyConfig proxyConfig;
     protected ObjectClient object;
@@ -33,6 +36,7 @@ public class ObjectBaseTest {
 
     @BeforeEach
     public void setup() throws IOException {
+        threadPool = java.util.concurrent.Executors.newFixedThreadPool(10);
         this.config = TestConfig.load().object;
         this.proxyConfig = TestConfig.load().proxy;
 
@@ -123,21 +127,37 @@ public class ObjectBaseTest {
 
     // 准备一个测试文件
     protected void prepareTestFile(String key, String content) {
-        object.putObject(PutObjectRequest.builder()
-                        .bucket(getBucketName())
-                        .key(key)
-                        .build(),
-                RequestBody.fromString(content)
-        );
+        threadPool.submit(() -> {
+            object.putObject(PutObjectRequest.builder()
+                            .bucket(getBucketName())
+                            .key(key)
+                            .build(),
+                    RequestBody.fromString(content)
+            );
+        });
+    }
+
+    protected void awaitAllTasksFinished() {
+        threadPool.shutdown();
+        try {
+            boolean terminated;
+            do {
+                terminated = threadPool.awaitTermination(1, TimeUnit.SECONDS);
+            } while (!terminated);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     // 删除一个测试文件
     protected void deleteTestFile(String key) {
-        object.deleteObject(DeleteObjectRequest.builder()
-                .bucket(getBucketName())
-                .key(key)
-                .build()
-        );
+        threadPool.submit(() -> {
+            object.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(getBucketName())
+                    .key(key)
+                    .build()
+            );
+        });
     }
 
     // 清理测试环境所有文件
@@ -153,16 +173,19 @@ public class ObjectBaseTest {
             // 构建批量删除请求
 
             // 删除对象
-            object.deleteObjects(DeleteObjectsRequest.builder()
-                    .bucket(bucketName)
-                    .delete(Delete.builder()
-                            .objects(listRes.contents().stream()
-                                    .map(o -> ObjectIdentifier.builder().key(o.key()).build())
-                                    .collect(Collectors.toList()))
-                            .build()
-                    )
-                    .build()
-            );
+            final ListObjectsV2Response finalListRes = listRes;
+            threadPool.submit(() -> {
+                object.deleteObjects(DeleteObjectsRequest.builder()
+                        .bucket(bucketName)
+                        .delete(Delete.builder()
+                                .objects(finalListRes.contents().stream()
+                                        .map(o -> ObjectIdentifier.builder().key(o.key()).build())
+                                        .collect(Collectors.toList()))
+                                .build()
+                        )
+                        .build()
+                );
+            });
             listReq = ListObjectsV2Request.builder()
                     .bucket(bucketName)
                     .continuationToken(listRes.nextContinuationToken())

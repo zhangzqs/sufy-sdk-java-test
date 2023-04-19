@@ -4,15 +4,31 @@ import com.sufy.sdk.services.object.model.*;
 import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
+import java.io.IOException;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TagTest extends ObjectBaseTest {
+    Tagging tagging;
+
+    @BeforeEach
+    public void setup() throws IOException {
+        super.setup();
+        tagging = Tagging.builder()
+                .tagSet(Set.of(
+                                Tag.builder().key("key1").value("value1").build(),
+                                Tag.builder().key("key2").value("value2").build()
+                        )
+                )
+                .build();
+    }
+
     @Test
     public void testPutBucketTagging() {
         /*
@@ -22,13 +38,7 @@ public class TagTest extends ObjectBaseTest {
          * */
         object.putBucketTagging(PutBucketTaggingRequest.builder()
                 .bucket(getBucketName())
-                .tagging(Tagging.builder()
-                        .tagSet(Set.of(
-                                        Tag.builder().key("key1").value("value1").build(),
-                                        Tag.builder().key("key2").value("value2").build()
-                                )
-                        )
-                        .build())
+                .tagging(tagging)
                 .build()
         );
     }
@@ -46,7 +56,9 @@ public class TagTest extends ObjectBaseTest {
          * */
         object.deleteBucketTagging(DeleteBucketTaggingRequest.builder().bucket(getBucketName()).build());
         recorder.startRecording();
-        object.getBucketTagging(GetBucketTaggingRequest.builder().bucket(getBucketName()).build());
+        {
+            object.getBucketTagging(GetBucketTaggingRequest.builder().bucket(getBucketName()).build());
+        }
         HttpClientRecorder.HttpRecord httpRecord = recorder.stopAndGetRecords().get(0);
 
         SdkHttpRequest request = httpRecord.request.httpRequest();

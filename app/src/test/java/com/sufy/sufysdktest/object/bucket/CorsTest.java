@@ -4,16 +4,34 @@ import com.sufy.sdk.services.object.model.*;
 import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CorsTest extends ObjectBaseTest {
+    CORSConfiguration corsConfiguration;
+
+    @BeforeEach
+    public void setup() throws IOException {
+        super.setup();
+        corsConfiguration = CORSConfiguration.builder()
+                .corsRules(List.of(
+                        CORSRule.builder()
+                                .id("test-cors-1")
+                                .allowedMethods("GET", "POST")
+                                .allowedOrigins("http://www.a.com")
+                                .build()
+                ))
+                .build();
+    }
+
     @Test
     public void testPutBucketCors() {
         /*
@@ -24,16 +42,7 @@ public class CorsTest extends ObjectBaseTest {
          */
         object.putBucketCors(PutBucketCorsRequest.builder()
                 .bucket(getBucketName())
-                .corsConfiguration(CORSConfiguration.builder()
-                        .corsRules(List.of(
-                                CORSRule.builder()
-                                        .id("test-cors-1")
-                                        .allowedMethods("GET", "POST")
-                                        .allowedOrigins("http://www.a.com")
-                                        .build()
-                        ))
-                        .build()
-                )
+                .corsConfiguration(corsConfiguration)
                 // .contentMD5("") 该字段自动完成了计算，无需手动填写
                 .build()
         );

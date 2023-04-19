@@ -2,7 +2,11 @@ package com.sufy.sufysdktest.object.object;
 
 import com.sufy.sdk.services.object.model.*;
 import com.sufy.sufysdktest.object.ObjectBaseTest;
+import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.http.SdkHttpMethod;
+import software.amazon.awssdk.http.SdkHttpRequest;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,20 +40,37 @@ public class ObjectManageTest extends ObjectBaseTest {
     @Test
     public void testDeleteObject() {
         String key = "testDeleteObjectFileKey";
-        prepareTestFile(key, "");
-        // TODO: 由于Head无法使用
-        HeadObjectResponse headObjectResponse = object.headObject(HeadObjectRequest.builder()
-                .bucket(getBucketName())
-                .key(key)
-                .build()
-        );
-        assertNotNull(headObjectResponse);
+        String content = "testDeleteObjectFileContent";
+        prepareTestFile(key, content);
+        assertDoesNotThrow(() -> {
+            // 文件存在
+            HeadObjectResponse headObjectResponse = object.headObject(HeadObjectRequest.builder()
+                    .bucket(getBucketName())
+                    .key(key)
+                    .build()
+            );
+            assertNotNull(headObjectResponse);
+            assertEquals(content.length(), headObjectResponse.contentLength());
+        });
+        recorder.startRecording();
         {
             object.deleteObject(DeleteObjectRequest.builder()
                     .bucket(getBucketName())
+                    .key(key)
                     .build()
             );
         }
+        HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
+        SdkHttpRequest request = record.request.httpRequest();
+        checkPublicRequestHeader(request);
+        assertEquals(SdkHttpMethod.DELETE, request.method());
+        assertEquals(String.format("/%s/%s", getBucketName(), key), request.encodedPath());
+
+        SdkHttpResponse response = record.response.httpResponse();
+        checkPublicResponseHeader(response);
+        assertEquals(204, record.response.httpResponse().statusCode());
+        assertEquals("No Content", record.response.httpResponse().statusText().orElseThrow());
+
         assertThrows(NoSuchKeyException.class, () -> {
             object.headObject(HeadObjectRequest.builder()
                     .bucket(getBucketName())
@@ -61,9 +82,6 @@ public class ObjectManageTest extends ObjectBaseTest {
 
     @Test
     public void testDeleteObjects() {
-        // TODO: 批量删除操作未删除成功
-        //  SDK发出请求的请求体JSON中的key为Object而文档中为objects
-        //  服务器端响应200但是返回的JSON中的deleted字段为空列表
         int nums = 10;
         // 准备空文件
         List<String> keys = new ArrayList<>();
@@ -103,8 +121,17 @@ public class ObjectManageTest extends ObjectBaseTest {
 
     @Test
     public void testRestoreObject() {
+        String key = "testRestoreObjectFileKey";
+        String content = "testRestoreObjectFileContent";
+        prepareTestFile(key, content);
+
         RestoreObjectResponse restoreObjectResponse = object.restoreObject(RestoreObjectRequest.builder()
                 .bucket(getBucketName())
+                .key(key)
+                .restoreRequest(RestoreRequest.builder()
+                        .days(1)
+                        .build()
+                )
                 .build()
         );
     }

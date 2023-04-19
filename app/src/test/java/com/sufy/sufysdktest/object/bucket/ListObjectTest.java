@@ -19,12 +19,15 @@ public class ListObjectTest extends ObjectBaseTest {
     public void testListObjects() {
         makeSureBucketExists();
         cleanAllFiles();
-
-        String prefix = "dir1/test-list-objects-v1-";
-        // 准备 10 个文件
+        awaitAllTasksFinished();
+        String prefix = "dir1/";
+        String subdir = prefix + "subdir/";
+        int N = 10;
         List<String> keys = new ArrayList<>();
-        for (int i = 0; i < 10; i++) keys.add(prefix + i);
+        for (int i = 0; i < N; i++) keys.add(prefix + "test-list-objects-v1-" + i);
+        for (int i = 0; i < N; i++) keys.add(subdir + "test-list-objects-v1-" + i);
         for (String key : keys) prepareTestFile(key, key);
+        awaitAllTasksFinished();
 
         recorder.startRecording();
         {
@@ -44,10 +47,9 @@ public class ListObjectTest extends ObjectBaseTest {
             assertTrue(listObjectsResponse1.isTruncated()); // 未列举完毕，被截断了
             {
                 List<SufyObject> contents = listObjectsResponse1.contents();
-                assertEquals(7, contents.size());
+                assertEquals(6, contents.size());
                 for (final SufyObject content : contents) {
-                    // TODO: etag 为null，由于服务器端返回的字段为etag，这里解析的方式为eTag
-//                    assertFalse(content.eTag().isEmpty());
+                    assertFalse(content.eTag().isEmpty());
                     assertFalse(content.key().isEmpty());
                     assertTrue(keys.stream().anyMatch(key -> key.equals(content.key())));
                     assertNotNull(content.lastModified());
@@ -57,7 +59,7 @@ public class ListObjectTest extends ObjectBaseTest {
             {
                 List<CommonPrefix> commonPrefixes = listObjectsResponse1.commonPrefixes();
                 assertEquals(1, commonPrefixes.size());
-                assertEquals("dir1/", commonPrefixes.get(0).prefix());
+                assertEquals(subdir, commonPrefixes.get(0).prefix());
             }
             ListObjectsResponse listObjectsResponse2 = object.listObjects(ListObjectsRequest.builder()
                     .bucket(getBucketName())
@@ -79,7 +81,7 @@ public class ListObjectTest extends ObjectBaseTest {
                 List<SufyObject> contents = listObjectsResponse2.contents();
                 assertEquals(3, contents.size());
                 for (final SufyObject content : contents) {
-//                    assertFalse(content.eTag().isEmpty());
+                    assertFalse(content.eTag().isEmpty());
                     assertFalse(content.key().isEmpty());
                     assertTrue(keys.stream().anyMatch(key -> key.equals(content.key())));
                     assertNotNull(content.lastModified());
@@ -123,10 +125,10 @@ public class ListObjectTest extends ObjectBaseTest {
         makeSureBucketExists();
         cleanAllFiles();
 
-        String prefix = "dir2/test-list-objects-v2-";
+        String prefix = "dir2/subdir/";
         // 准备 10 个文件
         List<String> keys = new ArrayList<>();
-        for (int i = 0; i < 10; i++) keys.add(prefix + i);
+        for (int i = 0; i < 10; i++) keys.add(prefix + "test-list-objects-v2-" + i);
         for (String key : keys) prepareTestFile(key, key);
 
         {
