@@ -32,10 +32,9 @@ public class LifecycleTest extends ObjectBaseTest {
                                                 .build()
                                 ))
                                 .expiration(LifecycleExpiration.builder()
-                                        .days(1)
+                                        .days(3)
                                         .build()
                                 )
-                                // TODO: 文档中未出现status字段，但是sdk中该字段为必填项，否则build()会报错
                                 .status(ExpirationStatus.ENABLED)
                                 .build()
                 ))
@@ -46,10 +45,10 @@ public class LifecycleTest extends ObjectBaseTest {
     public void testPutLifecycle() {
         recorder.startRecording();
         {
-            PutBucketLifecycleConfigurationResponse putResponse = object.putBucketLifecycleConfiguration(PutBucketLifecycleConfigurationRequest.builder()
+            PutBucketLifecycleConfigurationResponse putResponse = object.putBucketLifecycleConfiguration(
+                    PutBucketLifecycleConfigurationRequest.builder()
                             .bucket(getBucketName())
                             .lifecycleConfiguration(lifecycleConfiguration)
-//                            .contentMD5 // TODO: 文档要求content-md5，sdk中不构造该字段
                             .build()
             );
             assertNotNull(putResponse);
@@ -89,15 +88,15 @@ public class LifecycleTest extends ObjectBaseTest {
             assertEquals(expectRule.id(), actualRule.id());
             assertEquals(expectRule.filter().prefix(), actualRule.filter().prefix());
             assertEquals(expectRule.expiration().days(), actualRule.expiration().days());
-//            assertEquals(expectRule.status(), actualRule.status()); // TODO: 服务端不存在该字段
-//            {
-//                // TODO: 服务端transitions字段返回了null
-//                assertEquals(expectRule.transitions().size(), actualRule.transitions().size());
-//                Transition expectTransition = expectRule.transitions().get(0);
-//                Transition actualTransition = actualRule.transitions().get(0);
-//                assertEquals(expectTransition.days(), actualTransition.days());
-//                assertEquals(expectTransition.storageClass(), actualTransition.storageClass());
-//            }
+            // TODO: 服务端还不支持 Status: Enable 字段，这里会 null
+//            assertEquals(expectRule.status(), actualRule.status());
+            {
+                assertEquals(expectRule.transitions().size(), actualRule.transitions().size());
+                Transition expectTransition = expectRule.transitions().get(0);
+                Transition actualTransition = actualRule.transitions().get(0);
+                assertEquals(expectTransition.days(), actualTransition.days());
+                assertEquals(expectTransition.storageClass(), actualTransition.storageClass());
+            }
         }
     }
 
