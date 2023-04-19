@@ -4,12 +4,14 @@ import com.sufy.sdk.services.object.model.*;
 import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpMethod;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,8 +34,8 @@ public class ObjectPutAndGetTest extends ObjectBaseTest {
         String key = "testKey1";
         String content = "HelloWorld";
         Map<String, String> metadata = Map.ofEntries(
-                Map.entry("testKey1", "testValue1"),
-                Map.entry("testKey2", "testValue2")
+                Map.entry("test-key1", "test-value1"),
+                Map.entry("test-key2", "test-value2")
         );
         String storageClass = "STANDARD";
         recorder.startRecording();
@@ -84,18 +86,79 @@ public class ObjectPutAndGetTest extends ObjectBaseTest {
     }
 
     @Test
-    public void testGetObject() {
-        object.getObject(req -> req.bucket(getBucketName()).build());
+    public void testGetObject() throws IOException {
+        String key = "testKey1";
+        String content = "HelloWorld";
+        Map<String, String> metadata = Map.ofEntries(
+                Map.entry("test-key1", "test-value1"),
+                Map.entry("test-key2", "test-value2")
+        );
+        PutObjectResponse putObjectResponse = object.putObject(PutObjectRequest.builder()
+                        .bucket(getBucketName())
+                        .key(key)
+                        .metadata(metadata)
+                        .build(),
+                RequestBody.fromString(content)
+        );
+
+        recorder.startRecording();
+        {
+            ResponseInputStream<GetObjectResponse> ris = object.getObject(GetObjectRequest.builder()
+                    .bucket(getBucketName())
+                    .key(key)
+                    .build()
+            );
+            GetObjectResponse getObjectResponse = ris.response();
+            assertNotNull(getObjectResponse);
+            assertEquals(content.length(), getObjectResponse.contentLength());
+            assertEquals(putObjectResponse.eTag(), getObjectResponse.eTag());
+
+            for (Map.Entry<String, String> entry : getObjectResponse.metadata().entrySet()) {
+                assertEquals(entry.getValue(), metadata.get(entry.getKey()));
+            }
+            assertNotNull(getObjectResponse.lastModified());
+            assertEquals(content, new String(ris.readAllBytes()));
+        }
+        HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
+        SdkHttpRequest req = record.request.httpRequest();
+        SdkHttpResponse resp = record.response.httpResponse();
+
+        checkPublicRequestHeader(req);
+        assertEquals(SdkHttpMethod.GET, req.method());
+        assertEquals(String.format("/%s/%s", getBucketName(), key), req.encodedPath());
+
+        checkPublicResponseHeader(resp);
+        assertEquals(200, resp.statusCode());
+        assertEquals("OK", resp.statusText().orElseThrow());
+        {
+            assertTrue(resp.firstMatchingHeader("ETag").isPresent());
+            assertEquals(resp.firstMatchingHeader("ETag").get(), putObjectResponse.eTag());
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("Last-Modified").isPresent());
+            // 校验是否符合 RFC 822 时间标准
+            String lastModified = resp.firstMatchingHeader("Last-Modified").get();
+            assertTrue(lastModified.matches("\\w{3}, \\d{2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} GMT"));
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("Content-Length").isPresent());
+            assertEquals(resp.firstMatchingHeader("Content-Length").get(), String.valueOf(content.length()));
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("X-Sufy-Meta-test-key1").isPresent());
+            assertTrue(resp.firstMatchingHeader("X-Sufy-Meta-test-key2").isPresent());
+            assertEquals(resp.firstMatchingHeader("X-Sufy-Meta-test-key1").get(), metadata.get("test-key1"));
+            assertEquals(resp.firstMatchingHeader("X-Sufy-Meta-test-key2").get(), metadata.get("test-key2"));
+        }
     }
 
     @Test
     public void testHeadObject() {
         String key = "testKey1";
         String content = "HelloWorld";
-        // TODO: key中包含大写字母时会
         Map<String, String> metadata = Map.ofEntries(
-                Map.entry("testKey1", "testValue1"),
-                Map.entry("testKey2", "testValue2")
+                Map.entry("test-key1", "test-value1"),
+                Map.entry("test-key2", "test-value2")
         );
         StorageClass storageClass = StorageClass.DEEP_ARCHIVE;
         PutObjectResponse putObjectResponse = object.putObject(PutObjectRequest.builder()
@@ -122,7 +185,43 @@ public class ObjectPutAndGetTest extends ObjectBaseTest {
             for (Map.Entry<String, String> entry : headBucketResponse.metadata().entrySet()) {
                 assertEquals(entry.getValue(), metadata.get(entry.getKey()));
             }
+            assertNotNull(headBucketResponse.lastModified());
+
         }
         HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
+        SdkHttpRequest req = record.request.httpRequest();
+        SdkHttpResponse resp = record.response.httpResponse();
+
+        checkPublicRequestHeader(req);
+        assertEquals(SdkHttpMethod.HEAD, req.method());
+        assertEquals(String.format("/%s/%s", getBucketName(), key), req.encodedPath());
+
+        checkPublicResponseHeader(resp);
+        assertEquals(200, resp.statusCode());
+        assertEquals("OK", resp.statusText().orElseThrow());
+        {
+            assertTrue(resp.firstMatchingHeader("ETag").isPresent());
+            assertEquals(resp.firstMatchingHeader("ETag").get(), putObjectResponse.eTag());
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("Last-Modified").isPresent());
+            // 校验是否符合 RFC 822 时间标准
+            String lastModified = resp.firstMatchingHeader("Last-Modified").get();
+            assertTrue(lastModified.matches("\\w{3}, \\d{2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} GMT"));
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("Content-Length").isPresent());
+            assertEquals(resp.firstMatchingHeader("Content-Length").get(), String.valueOf(content.length()));
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("X-Sufy-Storage-Class").isPresent());
+            assertEquals(resp.firstMatchingHeader("X-Sufy-Storage-Class").get(), storageClass.toString());
+        }
+        {
+            assertTrue(resp.firstMatchingHeader("X-Sufy-Meta-test-key1").isPresent());
+            assertTrue(resp.firstMatchingHeader("X-Sufy-Meta-test-key2").isPresent());
+            assertEquals(resp.firstMatchingHeader("X-Sufy-Meta-test-key1").get(), metadata.get("test-key1"));
+            assertEquals(resp.firstMatchingHeader("X-Sufy-Meta-test-key2").get(), metadata.get("test-key2"));
+        }
     }
 }
