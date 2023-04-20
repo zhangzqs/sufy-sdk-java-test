@@ -21,6 +21,7 @@ import software.amazon.awssdk.regions.Region;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -225,6 +226,12 @@ public class ObjectBaseTest {
         } catch (Exception e) {
             // ignore
         }
+    }
+
+    protected byte[] randomBytes(int size) {
+        byte[] bytes = new byte[size];
+        new Random().nextBytes(bytes);
+        return bytes;
     }
 
     @Test
