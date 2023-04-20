@@ -24,9 +24,7 @@ public class PolicyTest extends ObjectBaseTest {
                     .build()
             );
             assertNotNull(getBucketLocationResponse.policyStatus());
-            // TODO: SDK 中 isPublic() 返回值类型为 Boolean 得到了一个null
-            // TODO: 但是服务器端正常返回了isPublic值为false
-//            assertFalse(getBucketLocationResponse.policyStatus().isPublic());
+            assertFalse(getBucketLocationResponse.policyStatus().isPublic());
         }
         HttpClientRecorder.HttpRecord httpRecord = recorder.stopAndGetRecords().get(0);
         SdkHttpRequest request = httpRecord.request.httpRequest();
@@ -93,9 +91,6 @@ public class PolicyTest extends ObjectBaseTest {
         SdkHttpResponse response = httpRecord.response.httpResponse();
         checkPublicResponseHeader(response);
         assertEquals(404, response.statusCode());
-
-        // TODO: expected: <NoSuchBucketPolicy> but was: <Not Found>
-//            assertEquals("NoSuchBucketPolicy", response.statusText().orElseThrow());
     }
 
     @Test
