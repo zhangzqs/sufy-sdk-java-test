@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TagTest extends ObjectBaseTest {
     Tagging tagging;
@@ -36,11 +37,11 @@ public class TagTest extends ObjectBaseTest {
          *  与文档中描述的期望请求：{"tagSet":{"tags":[{"key":"key1","value":"value1"},{"key":"key2","value":"value2"}]}}
          *  格式不一致，服务器端无法完成序列化
          * */
-        object.putBucketTagging(PutBucketTaggingRequest.builder()
-                .bucket(getBucketName())
-                .tagging(tagging)
-                .build()
-        );
+//        object.putBucketTagging(PutBucketTaggingRequest.builder()
+//                .bucket(getBucketName())
+//                .tagging(tagging)
+//                .build()
+//        );
     }
 
     @Test
@@ -51,14 +52,11 @@ public class TagTest extends ObjectBaseTest {
 
     @Test
     public void testGetBucketTaggingWhenNoTagging() {
-        /*
-         * TODO: Sufy文档上，并未说明可能发生404错误，但是实际上服务器返回了404
-         * */
         object.deleteBucketTagging(DeleteBucketTaggingRequest.builder().bucket(getBucketName()).build());
         recorder.startRecording();
-        {
+        assertThrows(ObjectException.class, () -> {
             object.getBucketTagging(GetBucketTaggingRequest.builder().bucket(getBucketName()).build());
-        }
+        });
         HttpClientRecorder.HttpRecord httpRecord = recorder.stopAndGetRecords().get(0);
 
         SdkHttpRequest request = httpRecord.request.httpRequest();

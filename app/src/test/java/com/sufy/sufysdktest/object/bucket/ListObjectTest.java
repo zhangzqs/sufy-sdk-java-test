@@ -23,8 +23,6 @@ public class ListObjectTest extends ObjectBaseTest {
      */
     @Test
     public void testListObjects() {
-        makeSureBucketExists();
-        cleanAllFiles();
         String prefix = "dir1/";
         String subdir = prefix + "subdir/";
         int N = 10;
@@ -125,8 +123,6 @@ public class ListObjectTest extends ObjectBaseTest {
 
     @Test
     public void testListObjectsV2() {
-        makeSureBucketExists();
-        cleanAllFiles();
         String prefix = "dir1/";
         String subdir = prefix + "subdir/";
         int N = 10;

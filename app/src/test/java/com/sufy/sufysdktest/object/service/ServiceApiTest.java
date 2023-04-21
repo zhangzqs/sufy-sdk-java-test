@@ -25,8 +25,12 @@ public class ServiceApiTest extends ObjectBaseTest {
                 for (Bucket bucket : listBucketsResponse.buckets()) {
                     assertNotNull(bucket.name());
                     assertNotNull(bucket.creationDate());
-                    // TODO: SDK 缺少该扩展字段定义
-//                assertNotNull(bucket.locationConstraint());
+                    assertNotNull(bucket.locationConstraintAsString());
+                    // TODO: 未内置region获得到null
+//                    assertNotNull(bucket.locationConstraint());
+                    if (bucket.name().equals(getBucketName())) {
+                        assertEquals(config.getRegion(), bucket.locationConstraintAsString());
+                    }
                 }
             }
             // owner
@@ -45,7 +49,7 @@ public class ServiceApiTest extends ObjectBaseTest {
         req.encodedPath();
         assertEquals(SdkHttpMethod.GET, req.method());
         assertEquals("/", req.encodedPath());
-        
+
         checkPublicResponseHeader(resp);
         assertEquals(200, resp.statusCode());
         assertEquals("OK", resp.statusText().orElseThrow());

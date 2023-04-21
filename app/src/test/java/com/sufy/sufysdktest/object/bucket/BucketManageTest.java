@@ -58,8 +58,7 @@ public class BucketManageTest extends ObjectBaseTest {
                     .bucket(getBucketName())
                     .build()
             );
-            // TODO: SDK 缺少该字段的获取器
-//            assertNotNull(headBucketResponse.region());
+            assertNotNull(headBucketResponse.regionAsString());
         }
         HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
 
@@ -138,5 +137,12 @@ public class BucketManageTest extends ObjectBaseTest {
         checkPublicResponseHeader(resp);
         assertEquals(204, resp.statusCode());
         assertEquals("No Content", resp.statusText().orElseThrow());
+
+        assertThrows(NoSuchBucketException.class, () -> {
+            object.headBucket(HeadBucketRequest.builder()
+                    .bucket(getBucketName())
+                    .build()
+            );
+        });
     }
 }

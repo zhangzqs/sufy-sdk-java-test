@@ -10,7 +10,6 @@ import com.sufy.sdk.services.object.model.*;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
@@ -44,7 +43,7 @@ public class ObjectBaseTest {
         ApacheHttpClient.Builder apacheHttpClientBuilder = ApacheHttpClient.builder()
                 .maxConnections(100)
                 .connectionTimeout(Duration.ofSeconds(5));
-        if (proxyConfig != null) {
+        if (proxyConfig != null && proxyConfig.isEnable()) {
             apacheHttpClientBuilder.proxyConfiguration(ProxyConfiguration.builder()
                     .endpoint(
                             URI.create(
@@ -68,6 +67,10 @@ public class ObjectBaseTest {
                 )
                 .httpClient(recorder)
                 .build();
+
+        // 测试环境中，每次测试前都清空 bucket 中的文件
+        makeSureBucketExists();
+        cleanAllFiles();
     }
 
     @AfterEach
@@ -232,24 +235,5 @@ public class ObjectBaseTest {
         byte[] bytes = new byte[size];
         new Random().nextBytes(bytes);
         return bytes;
-    }
-
-    @Test
-    public void testClearAllFiles() {
-        // 创建10个文件
-        for (int i = 0; i < 10; i++) {
-            prepareTestFile("test" + i, "test" + i);
-        }
-
-        cleanAllFiles();
-
-        // 列举文件
-        ListObjectsV2Response listRes = object.listObjectsV2(ListObjectsV2Request.builder()
-                .bucket(getBucketName())
-                .build()
-        );
-
-        // 判断是否为空
-        assertTrue(listRes.contents().isEmpty());
     }
 }

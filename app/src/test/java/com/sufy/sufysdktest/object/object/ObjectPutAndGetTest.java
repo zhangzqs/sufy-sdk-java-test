@@ -87,7 +87,7 @@ public class ObjectPutAndGetTest extends ObjectBaseTest {
 
     @Test
     public void testGetObject() throws IOException {
-        String key = "testKey1";
+        String key = "testGetObject";
         String content = "HelloWorld";
         Map<String, String> metadata = Map.ofEntries(
                 Map.entry("test-key1", "test-value1"),
