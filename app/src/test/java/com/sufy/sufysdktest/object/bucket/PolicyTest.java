@@ -1,22 +1,50 @@
 package com.sufy.sufysdktest.object.bucket;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.sufy.sdk.services.object.model.*;
 import com.sufy.sufysdktest.object.ObjectBaseTest;
 import com.sufy.util.HttpClientRecorder;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PolicyTest extends ObjectBaseTest {
+    PutBucketPolicyRequest putBucketPolicyRequest;
+
+    @BeforeEach
+    public void setup() throws IOException {
+        super.setup();
+        putBucketPolicyRequest = PutBucketPolicyRequest.builder()
+                .bucket(getBucketName())
+                .policy(String.format("{\n" +
+                        "    \"Version\": \"sufy\",\n" +
+                        "    \"Id\": \"public\",\n" +
+                        "    \"Statement\": [\n" +
+                        "      {\n" +
+                        "        \"Sid\": \"publicGet\",\n" +
+                        "        \"Effect\": \"Allow\",\n" +
+                        "        \"Principal\": \"*\",\n" +
+                        "        \"Action\": [\"miku:MOSGetObject\"],\n" +
+                        "        \"Resource\": [\"srn:miku:::%s/*\"]\n" +
+                        "      }\n" +
+                        "    ]\n" +
+                        "}", getBucketName()))
+                .build();
+    }
+
     /**
      * 测试查看空间是否公开
      */
     @Test
     public void testGetBucketPolicyStatus() {
         // aws在没配置BucketPolicy时会报NoSuchBucketPolicy,对客户端不友好，我们返回200(isPublic值为false)
+        object.deleteBucketPolicy(DeleteBucketPolicyRequest.builder().bucket(getBucketName()).build());
         recorder.startRecording();
         {
             GetBucketPolicyStatusResponse getBucketLocationResponse = object.getBucketPolicyStatus(GetBucketPolicyStatusRequest.builder()
@@ -25,6 +53,15 @@ public class PolicyTest extends ObjectBaseTest {
             );
             assertNotNull(getBucketLocationResponse.policyStatus());
             assertFalse(getBucketLocationResponse.policyStatus().isPublic());
+
+            // 配置后为true
+            object.putBucketPolicy(putBucketPolicyRequest);
+            getBucketLocationResponse = object.getBucketPolicyStatus(GetBucketPolicyStatusRequest.builder()
+                    .bucket(getBucketName())
+                    .build()
+            );
+            assertNotNull(getBucketLocationResponse.policyStatus());
+            assertTrue(getBucketLocationResponse.policyStatus().isPublic());
         }
         HttpClientRecorder.HttpRecord httpRecord = recorder.stopAndGetRecords().get(0);
         SdkHttpRequest request = httpRecord.request.httpRequest();
@@ -42,35 +79,49 @@ public class PolicyTest extends ObjectBaseTest {
 
     @Test
     public void testPutBucketPolicy() {
-        /*
-         * TODO: software.amazon.awssdk.core.exception.SdkClientException:
-         *  Unable to marshall request to JSON: class java.lang.String cannot be cast to class
-         *  software.amazon.awssdk.core.SdkPojo (java.lang.String is in module java.base of loader 'bootstrap';
-         *  software.amazon.awssdk.core.SdkPojo is in unnamed module of loader 'app')
-         *  PS: 看起来是因为String类型的policy字段被当成了一个SDK中的一个POJO对象进入到了请求的JSON序列化阶段导致失败
-         */
-//        object.putBucketPolicy(PutBucketPolicyRequest.builder()
-//                .bucket(getBucketName())
-//                .policy("{\n" +
-//                        "    \"Version\": \"sufy\",\n" +
-//                        "    \"Id\": \"public\",\n" +
-//                        "    \"Statement\": [\n" +
-//                        "      {\n" +
-//                        "        \"Sid\": \"publicGet\",\n" +
-//                        "        \"Effect\": \"Allow\",\n" +
-//                        "        \"Principal\": \"*\",\n" +
-//                        "        \"Action\": [\"miku:MOSGetObject\"],\n" +
-//                        "        \"Resource\": [\"srn:miku:::examplebucket/*\"]\n" +
-//                        "      }\n" +
-//                        "    ]\n" +
-//                        "}")
-//                .build());
+        recorder.startRecording();
+        {
+            PutBucketPolicyResponse putBucketPolicyResponse = object.putBucketPolicy(putBucketPolicyRequest);
+            assertNotNull(putBucketPolicyResponse);
+        }
+        HttpClientRecorder.HttpRecord httpRecord = recorder.stopAndGetRecords().get(0);
+        SdkHttpRequest request = httpRecord.request.httpRequest();
+        SdkHttpResponse response = httpRecord.response.httpResponse();
+
+        checkPublicRequestHeader(request);
+        assertEquals("PUT", request.method().name());
+        Assertions.assertEquals("/" + getBucketName(), request.encodedPath());
+        assertEquals("policy", request.encodedQueryParameters().orElseThrow());
+
+        checkPublicResponseHeader(response);
+        assertEquals(204, response.statusCode());
+        assertEquals("No Content", response.statusText().orElseThrow());
     }
 
     @Test
     public void testGetBucketPolicy() {
-        // TODO: 无法put，故暂时无法实现该测试
-//        object.getBucketPolicy(GetBucketPolicyRequest.builder().bucket(getBucketName()).build());
+        object.putBucketPolicy(putBucketPolicyRequest);
+        recorder.startRecording();
+        {
+            GetBucketPolicyResponse getBucketPolicyResponse = object.getBucketPolicy(GetBucketPolicyRequest.builder().bucket(getBucketName()).build());
+            assertNotNull(getBucketPolicyResponse);
+            assertNotNull(getBucketPolicyResponse.policy());
+            JSONObject expected = JSONObject.parseObject(putBucketPolicyRequest.policy());
+            JSONObject actual = JSONObject.parseObject(getBucketPolicyResponse.policy());
+            assertEquals(expected, actual);
+        }
+        HttpClientRecorder.HttpRecord httpRecord = recorder.stopAndGetRecords().get(0);
+        SdkHttpRequest request = httpRecord.request.httpRequest();
+        SdkHttpResponse response = httpRecord.response.httpResponse();
+
+        checkPublicRequestHeader(request);
+        assertEquals("GET", request.method().name());
+        Assertions.assertEquals("/" + getBucketName(), request.encodedPath());
+        assertEquals("policy", request.encodedQueryParameters().orElseThrow());
+
+        checkPublicResponseHeader(response);
+        assertEquals(200, response.statusCode());
+        assertEquals("OK", response.statusText().orElseThrow());
     }
 
     @Test
