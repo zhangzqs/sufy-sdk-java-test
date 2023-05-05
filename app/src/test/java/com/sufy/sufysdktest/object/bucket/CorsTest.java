@@ -125,5 +125,4 @@ public class CorsTest extends ObjectBaseTest {
         assertEquals(204, response.statusCode());
         assertEquals("No Content", response.statusText().orElseThrow());
     }
-
 }

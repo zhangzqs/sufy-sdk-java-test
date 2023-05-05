@@ -24,11 +24,6 @@ public class ObjectManageTest extends ObjectBaseTest {
         String content = "testCopyObjectFileContent";
         String metadataDirective = "REPLACE";
 
-        prepareAsyncEnv();
-        submitAsyncTask(() -> deleteTestFile(srcKey));
-        submitAsyncTask(() -> deleteTestFile(destKey));
-        awaitAllAsyncTasks();
-
         prepareTestFile(srcKey, content);
 
         // 复制文件

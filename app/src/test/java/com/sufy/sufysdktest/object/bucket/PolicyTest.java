@@ -20,8 +20,9 @@ public class PolicyTest extends ObjectBaseTest {
     @BeforeEach
     public void setup() throws IOException {
         super.setup();
+        String bucketName = getBucketName();
         putBucketPolicyRequest = PutBucketPolicyRequest.builder()
-                .bucket(getBucketName())
+                .bucket(bucketName)
                 .policy(String.format("{\n" +
                         "    \"Version\": \"sufy\",\n" +
                         "    \"Id\": \"public\",\n" +
@@ -34,8 +35,9 @@ public class PolicyTest extends ObjectBaseTest {
                         "        \"Resource\": [\"srn:miku:::%s/*\"]\n" +
                         "      }\n" +
                         "    ]\n" +
-                        "}", getBucketName()))
+                        "}", bucketName))
                 .build();
+        System.out.println(putBucketPolicyRequest.policy());
     }
 
     /**
@@ -43,6 +45,7 @@ public class PolicyTest extends ObjectBaseTest {
      */
     @Test
     public void testGetBucketPolicyStatus() {
+
         // aws在没配置BucketPolicy时会报NoSuchBucketPolicy,对客户端不友好，我们返回200(isPublic值为false)
         object.deleteBucketPolicy(DeleteBucketPolicyRequest.builder().bucket(getBucketName()).build());
         recorder.startRecording();

@@ -96,7 +96,7 @@ public class ObjectBaseTest {
             String date = request.headers().get("X-Sufy-Date").get(0);
             // 判断时间格式是否为ISO8601格式
             // TODO: 20230413T012347Z 是ISO8601格式吗?
-//            assertTrue(date.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z"), date);
+            assertTrue(date.matches("\\d{4}\\d{2}\\d{2}T\\d{2}\\d{2}\\d{2}Z"), date);
         }
 
         assertTrue(request.headers().get("User-Agent").get(0).startsWith("sufy-sdk-java/"));

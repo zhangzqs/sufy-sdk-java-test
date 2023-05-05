@@ -88,12 +88,9 @@ public class BucketManageTest extends ObjectBaseTest {
             String locationConstraint = response.locationConstraintAsString();
             assertNotNull(locationConstraint);
             assertEquals(config.getRegion(), locationConstraint);
-            // TODO: 返回null
-            //  需要将区域内置到SDK中，否则不存在的regionId将返回null
-            //  SDK目前只能返回枚举中固定的值
-//            BucketLocationConstraint blc = response.locationConstraint();
-//            assertNotNull(blc);
-//            assertEquals(config.getRegion(), response.locationConstraint().toString());
+            BucketLocationConstraint blc = response.locationConstraint();
+            assertNotNull(blc);
+            assertEquals(config.getRegion(), response.locationConstraint().toString());
         }
         HttpClientRecorder.HttpRecord record = recorder.stopAndGetRecords().get(0);
 
